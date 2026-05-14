@@ -1,8 +1,12 @@
 import express from "express";
+import cors from "cors";
 import { fetchJmaForecast } from "./services/jmaApi";
 import { transform } from "./services/transform";
 
 const app = express();
+
+app.use(cors());
+
 const PORT = 3000;
 
 app.get("/", (req, res) => {
