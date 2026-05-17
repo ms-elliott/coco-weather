@@ -11,6 +11,13 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
+  --main: #66A6FF;      /* 空色 */
+  --sub: #89F7FE;       /* 明るい水色 */
+  --accent: #FFD93D;    /* 太陽っぽい黄色 */
+  --bg: #F5FBFF;        /* 背景 */
+  --card: #FFFFFF;
+  --text: #333;
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
