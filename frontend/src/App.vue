@@ -334,6 +334,7 @@ temp {
     text-align: start;
     white-space: pre-line;
     width: 760px;
+    animation: fadeUp 0.6s ease;
 }
 
 .overview-card::after {
@@ -343,6 +344,18 @@ temp {
     left: 20px;
     border: 10px solid transparent;
     border-top-color: #fff;
+}
+
+.overview-header {
+    margin-bottom: 16px;
+}
+
+.title {
+    font-weight: bold;
+}
+
+.overview-card p {
+    font-size: 14px;
 }
 
 .footer {
