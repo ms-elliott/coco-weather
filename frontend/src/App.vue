@@ -51,6 +51,14 @@ const currentWeather = computed(() => {
     return weatherData.value?.forecasts?.[0]?.weather ?? "";
 });
 
+const overview = ref("");
+
+onMounted(async () => {
+    const res = await fetch("http://localhost:3000/api/overview");
+    const data = await res.json();
+    overview.value = data.text;
+});
+
 function getLabel(date: string) {
     const today = new Date();
     const target = new Date(date);
@@ -120,6 +128,16 @@ function getLabel(date: string) {
                     </p>
                 </div>
             </transition-group>
+            <div class="overview-card">
+                <div class="overview-header">
+                    <span class="icon">📝</span>
+                    <span class="title">天気概況</span>
+                </div>
+
+                <p class="overview-text">
+                    {{ overview }}
+                </p>
+            </div>
         </div>
         <div class="footer">
             <p>
@@ -146,18 +164,18 @@ body {
     transition: background 0.8s ease;
 }
 
-/* ☀️ 晴れ */
+/* 晴れ */
 .container.sunny {
     /* background: linear-gradient(135deg, #89f7fe, #66a6ff); */
     background: linear-gradient(135deg, #fff8dc, #add8e6);
 }
 
-/* 🌧 雨 */
+/* 雨 */
 .container.rainy {
     background: linear-gradient(135deg, lightgray, #87ceeb);
 }
 
-/* ☁️ 曇 */
+/* 曇 */
 .container.cloudy {
     background: linear-gradient(135deg, white, #304352);
 }
@@ -306,9 +324,30 @@ temp {
     margin-top: 8px;
 }
 
+.overview-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 20px;
+    position: relative;
+    line-height: 1.2;
+    text-align: start;
+    white-space: pre-line;
+    width: 760px;
+}
+
+.overview-card::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 20px;
+    border: 10px solid transparent;
+    border-top-color: #fff;
+}
+
 .footer {
     margin-top: 20px;
-    font-size: smaller;
+    font-size: 12px;
     color: #555;
 }
 
