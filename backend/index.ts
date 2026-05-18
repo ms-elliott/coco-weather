@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { fetchJmaForecast } from "./services/jmaApi";
 import { transform } from "./services/transform";
+import { fetchOverview } from "./services/fetchOverview";
 
 const app = express();
 
@@ -22,6 +23,15 @@ app.get("/api/weather", async (req, res) => {
     } catch (e) {
         console.error(e);
         res.status(500).json({ error: "failed" });
+    }
+});
+
+app.get("/api/overview", async (req, res) => {
+    try {
+        const data = await fetchOverview();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: "取得失敗" });
     }
 });
 

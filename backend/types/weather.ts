@@ -5,7 +5,7 @@ export type Weather = {
         min?: number;
         max?: number;
     };
-    precipitationProbability: number;
+    precipitationProbability?: number;
 };
 
 export type WeatherResponse = {
