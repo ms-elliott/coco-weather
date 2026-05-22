@@ -1,97 +1,105 @@
+import { error } from "node:console";
 import { JmaForecast } from "../types/jmaForecast";
 import { WeatherResponse } from "../types/weather";
 
 export function transform(data: JmaForecast): WeatherResponse {
-    // ===== ガード =====
-    if (!data || data.length === 0) {
-        throw new Error("データが空です");
-    }
-
-    const ts = data[0]?.timeSeries;
+    // -----------------------------
+    // データチェック
+    // -----------------------------
+    const ts = data?.[0]?.timeSeries;
 
     if (!ts || ts.length < 3) {
-        throw new Error("timeSeriesが不正です");
+        throw new Error("timeSeriesが不正");
     }
 
     const weatherSeries = ts[0];
-    const popSeries = ts.find((s: any) => s.areas?.[0]?.pops);
+    const popSeries = ts[1];
     const tempSeries = ts[2];
 
-    if (!weatherSeries || !weatherSeries.areas?.length) {
-        throw new Error("weatherSeriesが不正です");
+    if (!weatherSeries) {
+        throw new Error("weatherSeriesが不正");
     }
 
-    const area = weatherSeries.areas[0];
-
+    const area = weatherSeries.areas?.[0];
     if (!area) {
         throw new Error("areaが存在しません");
     }
 
-    const pop = popSeries?.areas?.[0]?.pops ?? [];
-    const temp = tempSeries?.areas?.[0]?.temps ?? [];
+    const tempArea = tempSeries?.areas?.[0];
+    const popArea = popSeries?.areas?.[0];
 
+    // -----------------------------
+    // forecasts生成
+    // -----------------------------
     return {
         location: area.area.name,
         forecasts: weatherSeries.timeDefines.map((date: string, i: number) => {
-            // ===== 気温 =====
-            const temperature: { min?: number; max?: number } = {};
+            const weather = area.weathers?.[i] ?? "";
 
-            const tempTimes = tempSeries?.timeDefines ?? [];
-            const tempValues = tempSeries?.areas?.[0]?.temps ?? [];
+            // -----------------------------
+            // 気温（完全修正版）
+            // -----------------------------
+            let min: number | undefined;
+            let max: number | undefined;
+            const temps = tempArea?.temps;
 
-            // 👇 weatherの日付（YYYY-MM-DDだけ比較）
-            const weatherDay = date.split("T")[0] ?? "";
+            if (tempSeries?.timeDefines && temps) {
+                const sameDayTemps = tempSeries.timeDefines
+                    .map((t: string, idx: number) => {
+                        if (t.slice(0, 10) === date.slice(0, 10)) {
+                            return Number(temps[idx]);
+                        }
+                        return null;
+                    })
+                    .filter((n): n is number => n !== null && !isNaN(n));
 
-            // 👇 temp側から一致する日を探す
-            const tempIndex = tempTimes.findIndex((t: string) =>
-                t.startsWith(weatherDay),
-            );
+                // 👇 これ追加（重要）
+                const uniqueTemps = [...new Set(sameDayTemps)];
 
-            if (tempIndex !== -1) {
-                const min = Number(tempValues[tempIndex * 2]);
-                const max = Number(tempValues[tempIndex * 2 + 1]);
-
-                if (!isNaN(min)) temperature.min = min;
-                if (!isNaN(max)) temperature.max = max;
+                if (uniqueTemps.length === 1) {
+                    max = uniqueTemps[0];
+                    min = undefined;
+                } else if (uniqueTemps.length > 1) {
+                    min = Math.min(...uniqueTemps);
+                    max = Math.max(...uniqueTemps);
+                }
             }
+            // -----------------------------
+            // 降水確率（最大値を採用）
+            // -----------------------------
+            let precipitationProbability = 0;
 
-            // ===== 降水確率 =====
-            let precipitationProbability: number | undefined = undefined;
+            const pops = popArea?.pops;
 
-            const popTimes = popSeries?.timeDefines ?? [];
-            const popValues = popSeries?.areas?.[0]?.pops ?? [];
-
-            if (weatherDay) {
-                const indices = popTimes
-                    .map((t: string, idx: number) =>
-                        t.startsWith(weatherDay) ? idx : -1,
-                    )
-                    .filter((idx: number) => idx !== -1);
-
-                const validPops = indices
-                    .map((idx: number) => popValues[idx])
+            if (popSeries?.timeDefines && pops) {
+                const sameDayPops = popSeries.timeDefines
+                    .map((t: string, idx: number) => {
+                        if (t.slice(0, 10) === date.slice(0, 10)) {
+                            return pops[idx]; // ← 修正ポイント
+                        }
+                        return null;
+                    })
                     .filter(
                         (p): p is string =>
-                            p !== undefined && p !== "" && p !== "--",
+                            p !== null && p !== "" && p !== "--",
                     )
                     .map((p) => Number(p))
                     .filter((n) => !isNaN(n));
 
-                if (validPops.length > 0) {
-                    precipitationProbability = Math.max(...validPops);
+                if (sameDayPops.length > 0) {
+                    precipitationProbability = Math.max(...sameDayPops);
                 }
             }
-            const result: any = {
+
+            return {
                 date,
-                weather: area.weathers?.[i] ?? "",
-                temperature,
+                weather,
+                temperature: {
+                    ...(min !== undefined ? { min } : {}),
+                    ...(max !== undefined ? { max } : {}),
+                },
+                precipitationProbability,
             };
-
-            if (precipitationProbability !== undefined) {
-                result.precipitationProbability = precipitationProbability;
-            }
-
-            return result;
         }),
     };
 }

@@ -32,17 +32,32 @@ onMounted(async () => {
 });
 
 function getWeatherIcon(weather: string) {
-    if (weather.includes("雷")) return "/icons/thunder.png";
-    if (weather.includes("雪")) return "/icons/snow.png";
-    if (weather.includes("雨")) return "/icons/rain.png";
-    if (weather.includes("曇")) return "/icons/cloud.png";
-    if (weather.includes("晴")) return "/icons/sun.png";
+    if (weather.startsWith("雨") || weather.startsWith("あめ"))
+        return "/icons/rain.png";
+    if (weather.startsWith("曇") || weather.startsWith("くもり"))
+        return "/icons/cloud.png";
+    if (weather.startsWith("晴") || weather.startsWith("はれ"))
+        return "/icons/sun.png";
+    if (weather.startsWith("雷") || weather.startsWith("かみなり"))
+        return "/icons/thunder.png";
+    if (weather.startsWith("雪") || weather.startsWith("ゆき"))
+        return "/icons/snow.png";
+    if (weather.includes("雨") || weather.includes("あめ"))
+        return "/icons/rain.png";
+    if (weather.includes("曇") || weather.includes("くもり"))
+        return "/icons/cloud.png";
+    if (weather.includes("晴") || weather.includes("はれ"))
+        return "/icons/sun.png";
+    if (weather.includes("雷") || weather.includes("かみなり"))
+        return "/icons/thunder.png";
+    if (weather.includes("雪") || weather.includes("ゆき"))
+        return "/icons/snow.png";
     return "/icons/default.png";
 }
 
 function getBg(weather: string) {
     if (weather.includes("雨") || weather.includes("雪")) return "rainy";
-    if (weather.includes("曇") || weather.includes("雷")) return "cloudy";
+    if (weather.includes("くもり") || weather.includes("雷")) return "cloudy";
     if (weather.includes("晴")) return "sunny";
     return "default";
 }
@@ -110,9 +125,17 @@ function getLabel(date: string) {
                         }}
                     </p>
                     <!-- 天気 -->
-                    <p class="weather">
-                        <img :src="getWeatherIcon(item.weather)" class="icon" />
-                    </p>
+                    <div class="weather-wrapper">
+                        <div class="weather">
+                            <img
+                                :src="getWeatherIcon(item.weather)"
+                                class="icon"
+                            />
+                        </div>
+                        <div class="weather-discribe">
+                            <p>{{ item.weather.replace(/\s+/g, "") }}</p>
+                        </div>
+                    </div>
                     <!-- 気温（メイン） -->
                     <p class="temp">
                         <span class="max"
@@ -162,6 +185,16 @@ body {
     text-align: center;
     min-height: 100vh;
     transition: background 0.8s ease;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 12px;
+    }
+
+    .overview-card {
+        padding: 16px;
+    }
 }
 
 /* 晴れ */
@@ -215,8 +248,10 @@ h2.location {
 
 .cards {
     display: flex;
-    gap: 16px;
+    gap: 12px;
+    padding: 20px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .fade-enter-active {
@@ -249,6 +284,21 @@ h2.location {
     cursor: pointer;
     animation: fadeUp 0.6s ease forwards;
     opacity: 0;
+    flex: 1;
+    min-width: 200px;
+}
+
+@media (max-width: 600px) {
+    .cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        width: 90%;
+        flex: none;
+        min-width: unset;
+    }
 }
 
 .card:first-child {
@@ -297,16 +347,50 @@ h2.location {
     animation: float 2s ease-in-out infinite;
 }
 
+.weather-discribe {
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
 .icon {
-    width: 48px;
-    height: 48px;
     width: 50%;
     height: 50%;
+}
+
+@media (max-width: 600px) {
+    .icon {
+        width: 60px;
+        height: 60px;
+    }
 }
 
 temp {
     font-size: 24px;
     font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    .label {
+        font-size: 16px;
+    }
+
+    .date {
+        font-size: 14px;
+    }
+
+    .weather {
+        font-size: 28px; /* ← 小さくする */
+    }
+
+    .temp {
+        font-size: 22px; /* ← 大きくする */
+        font-weight: bold;
+    }
+
+    .rain {
+        font-size: 16px;
+    }
 }
 
 .max {
