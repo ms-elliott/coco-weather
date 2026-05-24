@@ -32,6 +32,11 @@ onMounted(async () => {
 });
 
 function getWeatherIcon(weather: string) {
+    if (
+        weather.replace(/\s+/g, "") === "晴れ時々くもり" ||
+        weather.replace(/\s+/g, "") === "くもり時々晴れ"
+    )
+        return "./icons/default.png";
     if (weather.startsWith("雨") || weather.startsWith("あめ"))
         return "/icons/rain.png";
     if (weather.startsWith("曇") || weather.startsWith("くもり"))

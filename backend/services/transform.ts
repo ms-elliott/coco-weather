@@ -64,10 +64,15 @@ export function transform(data: JmaForecast): WeatherResponse {
                     max = Math.max(...uniqueTemps);
                 }
             }
+
+            const temperature = {
+                ...(min !== undefined && { min }),
+                ...(max !== undefined && { max }),
+            };
             // -----------------------------
             // 降水確率（最大値を採用）
             // -----------------------------
-            let precipitationProbability = 0;
+            let precipitationProbability: number | undefined = undefined;
 
             const pops = popArea?.pops;
 
@@ -75,16 +80,22 @@ export function transform(data: JmaForecast): WeatherResponse {
                 const sameDayPops = popSeries.timeDefines
                     .map((t: string, idx: number) => {
                         if (t.slice(0, 10) === date.slice(0, 10)) {
-                            return pops[idx]; // ← 修正ポイント
+                            return pops[idx];
                         }
                         return null;
                     })
                     .filter(
                         (p): p is string =>
-                            p !== null && p !== "" && p !== "--",
+                            p !== null &&
+                            p !== undefined &&
+                            p !== "" &&
+                            p !== "--",
                     )
-                    .map((p) => Number(p))
-                    .filter((n) => !isNaN(n));
+                    .map((p) => {
+                        const num = Number(p);
+                        return isNaN(num) ? null : num;
+                    })
+                    .filter((n): n is number => n !== null);
 
                 if (sameDayPops.length > 0) {
                     precipitationProbability = Math.max(...sameDayPops);
@@ -93,12 +104,12 @@ export function transform(data: JmaForecast): WeatherResponse {
 
             return {
                 date,
-                weather,
-                temperature: {
-                    ...(min !== undefined ? { min } : {}),
-                    ...(max !== undefined ? { max } : {}),
-                },
-                precipitationProbability,
+                weather: area.weathers?.[i] ?? "",
+                temperature,
+
+                ...(precipitationProbability !== undefined && {
+                    precipitationProbability,
+                }),
             };
         }),
     };
