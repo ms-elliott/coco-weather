@@ -21,7 +21,10 @@ const loading = ref(true);
 
 onMounted(async () => {
     try {
-        const res = await fetch("http://localhost:3000/api/weather");
+        // const res = await fetch("http://localhost:3000/api/weather");
+        const res = await fetch(
+            "https://coco-weather.onrender.com/api/weather",
+        );
         const data = await res.json();
         weatherData.value = data;
     } catch (e) {
