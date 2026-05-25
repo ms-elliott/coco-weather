@@ -1,8 +1,7 @@
 import axios from "axios";
 
-export async function fetchOverview() {
-    const url =
-        "https://www.jma.go.jp/bosai/forecast/data/overview_forecast/130000.json";
+export async function fetchOverview(areaCode: string) {
+    const url = `https://www.jma.go.jp/bosai/forecast/data/overview_forecast/${areaCode}.json`;
 
     const res = await axios.get(url);
 

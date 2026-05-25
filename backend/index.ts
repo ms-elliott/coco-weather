@@ -30,7 +30,9 @@ app.get("/api/weather", async (req, res) => {
 
 app.get("/api/overview", async (req, res) => {
     try {
-        const data = await fetchOverview();
+        const area =
+            typeof req.query.area === "string" ? req.query.area : "130000";
+        const data = await fetchOverview(area);
         res.json(data);
     } catch (error) {
         res.status(500).json({ error: "取得失敗" });
