@@ -19,12 +19,13 @@ type WeatherResponse = {
 
 const weatherData = ref<WeatherResponse | null>(null);
 const loading = ref(true);
+const API_URL = "https://coco-weather.onrender.com";
 
 onMounted(async () => {
     try {
         // const res = await fetch("http://localhost:3000/api/weather");
         const res = await fetch(
-            "https://coco-weather.onrender.com/api/weather",
+            `${API_URL}/api/weather?area=${selectedArea.value}`,
         );
         const data = await res.json();
         weatherData.value = data;
@@ -78,7 +79,7 @@ const currentWeather = computed(() => {
 const overview = ref("");
 
 onMounted(async () => {
-    const res = await fetch("http://localhost:3000/api/overview");
+    const res = await fetch(`${API_URL}/api/overview`);
     const data = await res.json();
     overview.value = data.text;
 });
