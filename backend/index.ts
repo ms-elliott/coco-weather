@@ -16,7 +16,9 @@ app.get("/", (req, res) => {
 
 app.get("/api/weather", async (req, res) => {
     try {
-        const raw = await fetchJmaForecast("130000"); // 東京都
+        const area =
+            typeof req.query.area === "string" ? req.query.area : "130000";
+        const raw = await fetchJmaForecast(area);
         const data = transform(raw);
 
         res.json(data);
