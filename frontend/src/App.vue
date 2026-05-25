@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
+import { areas } from "./data/areas";
 
 type Weather = {
     date: string;
@@ -101,6 +102,29 @@ function getLabel(date: string) {
         day: "numeric",
     });
 }
+
+const selectedRegion = ref("関東甲信");
+const selectedArea = ref("130000");
+
+const filteredAreas = computed(() => {
+    return areas.find((a) => a.region === selectedRegion.value)?.list ?? [];
+});
+
+watch(selectedRegion, (newRegion) => {
+    const region = areas.find((a) => a.region === newRegion);
+    if (region) {
+        selectedArea.value = region.list[0].code;
+        fetchWeather();
+    }
+});
+
+async function fetchWeather() {
+    console.log("selectedArea", selectedArea.value);
+    const res = await fetch(
+        `https://xxxxx.onrender.com/weather?area=${selectedArea.value}`,
+    );
+    weatherData.value = await res.json();
+}
 </script>
 
 <template>
@@ -112,6 +136,26 @@ function getLabel(date: string) {
         <div v-if="loading" class="loading">読み込み中...</div>
 
         <div v-else-if="weatherData">
+            <div class="selector-wrapper">
+                <select v-model="selectedRegion">
+                    <option
+                        v-for="region in areas"
+                        :key="region.region"
+                        :value="region.region"
+                    >
+                        {{ region.region }}
+                    </option>
+                </select>
+                <select v-model="selectedArea" @change="fetchWeather">
+                    <option
+                        v-for="area in filteredAreas"
+                        :key="area.code"
+                        :value="area.code"
+                    >
+                        {{ area.name }}
+                    </option>
+                </select>
+            </div>
             <h2 class="location">ー {{ weatherData.location }} ー</h2>
 
             <transition-group name="fade" tag="div" class="cards">
