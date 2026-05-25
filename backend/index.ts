@@ -8,6 +8,8 @@ const app = express();
 
 app.use(cors());
 
+console.log("🔥 NEW CODE LOADED");
+
 const PORT = 3000;
 
 app.get("/", (req, res) => {
