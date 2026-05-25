@@ -18,6 +18,9 @@ app.get("/api/weather", async (req, res) => {
     try {
         const area =
             typeof req.query.area === "string" ? req.query.area : "130000";
+
+        console.log("🔥 FETCH URL:", area);
+
         const raw = await fetchJmaForecast(area);
         const data = transform(raw);
 
