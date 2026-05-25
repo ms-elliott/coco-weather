@@ -122,7 +122,7 @@ watch(selectedRegion, (newRegion) => {
 async function fetchWeather() {
     console.log("selectedArea", selectedArea.value);
     const res = await fetch(
-        `https://xxxxx.onrender.com/weather?area=${selectedArea.value}`,
+        `${API_URL}/api/weather?area=${selectedArea.value}`,
     );
     weatherData.value = await res.json();
 }
