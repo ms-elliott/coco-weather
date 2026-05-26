@@ -115,9 +115,11 @@ watch(selectedRegion, (newRegion) => {
     const region = areas.find((a) => a.region === newRegion);
     if (region) {
         selectedArea.value = region.list[0].code;
-        fetchWeather();
-        fetchOverview();
     }
+});
+
+watch(selectedArea, async () => {
+    await Promise.all([fetchWeather(), fetchOverview()]);
 });
 
 async function fetchWeather() {
@@ -129,7 +131,7 @@ async function fetchWeather() {
 
 async function fetchOverview() {
     const res = await fetch(
-        `https://coco-weather.onrender.com/api/overview?area=${selectedArea.value}`,
+        `${API_URL}/api/overview?area=${selectedArea.value}`,
     );
     const data = await res.json();
     overview.value = data.text;
