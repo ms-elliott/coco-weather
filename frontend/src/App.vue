@@ -94,63 +94,92 @@ function getLabel(date: string) {
   });
 }
 
-function getCurrentLocation() {
-  if (!navigator.geolocation) {
-    alert("位置情報が使えません");
-    return;
-  }
+const isLocating = ref(false);
+
+async function getCurrentLocation() {
+  isLocating.value = true;
 
   navigator.geolocation.getCurrentPosition(
-    ((pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+    async (pos) => {
+      try {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-      console.log("現在地", lat, lon);
+        console.log("現在地:", lat, lon);
 
-      const areaCode = getAreaCodeFromLatLon(lat, lon);
-      console.log(location.protocol);
-      if (areaCode) {
+        const areaCode = await getAreaCodeFromLatLon(lat, lon);
+
+        console.log("決定エリア:", areaCode);
+
+        const region = findRegionByAreaCode(areaCode);
+
+        if (region) {
+          selectedRegion.value = region.region;
+        }
+
         selectedArea.value = areaCode;
-      } else {
-        alert("エリア判定できませんでした。");
+
+        await fetchWeather();
+        await fetchOverview();
+      } catch (e) {
+        console.error(e);
+        alert("現在地の取得に失敗しました");
+      } finally {
+        isLocating.value = false; // ← ここ重要
       }
     },
-    () => {
+    (err) => {
+      console.error(err);
       alert("位置情報の取得に失敗しました");
-    }),
+      isLocating.value = false; // ← 忘れがち
+    },
   );
 }
 
-function getAreaCodeFromLatLon(lat: number, lon: number): string {
-  if (lat > 35 && lat < 36 && lon > 139 && lon < 140) {
-    return "130000";
+async function getAreaCodeFromLatLon(
+  lat: number,
+  lon: number,
+): Promise<string> {
+  const res = await fetch(
+    `https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat=${lat}&lon=${lon}`,
+  );
+
+  const data = await res.json();
+
+  const muniCd = data.results.muniCd; // 例: "13101"
+  const prefCode = muniCd.slice(0, 2); // "13"
+
+  return findAreaCodeFromPref(prefCode);
+}
+
+function findAreaCodeFromPref(prefCode: string): string {
+  for (const region of areas) {
+    for (const area of region.list) {
+      if (area.code.startsWith(prefCode)) {
+        return area.code;
+      }
+    }
   }
 
-  if (lat > 34 && lat < 35 && lon > 136 && lon < 137) {
-    return "230000";
-  }
+  return "130000"; // fallback（東京）
+}
 
-  // 大阪
-  if (lat > 34 && lat < 35 && lon > 135 && lon < 136) {
-    return "270000";
-  }
-
-  // fallback
-  return "130000";
+function findRegionByAreaCode(code: string) {
+  return areas.find((r) => r.list.some((a) => a.code === code));
 }
 
 const selectedRegion = ref("関東甲信");
 const selectedArea = ref("130000");
 
-const filteredAreas = computed(() => {
-  return areas.find((a) => a.region === selectedRegion.value)?.list ?? [];
-});
-
-watch(selectedRegion, (newRegion) => {
-  const region = areas.find((a) => a.region === newRegion);
+function onRegionChange() {
+  const region = areas.find((a) => a.region === selectedRegion.value);
   if (region) {
     selectedArea.value = region.list[0].code;
   }
+}
+
+const filteredAreas = computed(() => {
+  return areas.find((a) => a.region === selectedRegion.value)?.list ?? [];
 });
 
 watch(selectedArea, async () => {
@@ -179,10 +208,18 @@ async function fetchOverview() {
 
     <div v-else-if="weatherData">
       <div class="selector-wrapper">
-        <button class="location-btn" @click="getCurrentLocation">
-          📍現在地
+        <button
+          class="location-btn"
+          @click="getCurrentLocation"
+          :disabled="isLocating"
+        >
+          <span v-if="isLocating" class="loading-content">
+            <span class="spinner"></span>
+            取得中...
+          </span>
+          <span v-else>📍 現在地</span>
         </button>
-        <select v-model="selectedRegion">
+        <select v-model="selectedRegion" @change="onRegionChange">
           <option
             v-for="region in areas"
             :key="region.region"
@@ -203,7 +240,7 @@ async function fetchOverview() {
       </div>
       <h4 class="location">ー {{ weatherData.location }} ー</h4>
 
-      <transition-group name="fade" tag="div" class="cards">
+      <transition-group name="fade" tag="div" class="cards" :key="selectedArea">
         <div
           v-for="(item, index) in weatherData.forecasts.slice(0, 3)"
           :key="item.date"
@@ -299,6 +336,39 @@ body {
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: all 0.2s;
+}
+
+.loading-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* くるくる */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ccc;
+  border-top: 2px solid #333;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* アニメーション */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ボタン無効時 */
+.location-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .location-btn:hover {
