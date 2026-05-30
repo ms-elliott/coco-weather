@@ -23,7 +23,6 @@ const API_URL = "https://coco-weather.onrender.com";
 
 onMounted(async () => {
   try {
-    // const res = await fetch("http://localhost:3000/api/weather");
     const res = await fetch(
       `${API_URL}/api/weather?area=${selectedArea.value}`,
     );
