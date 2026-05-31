@@ -2,6 +2,17 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { areas } from "./data/areas";
 
+import { useWeather } from "./composables/useWeather";
+import { useLocation } from "./composables/useLocation";
+import { useAreas } from "./composables/useAreas";
+
+const selectedRegion = ref("関東甲信");
+const selectedArea = ref("130000");
+
+const { weatherData, overview, fetchAll } = useWeather();
+const { isLocating, getCurrentLocation } = useLocation();
+const { findRegionByAreaCode } = useAreas();
+
 type Weather = {
   date: string;
   weather: string;
@@ -17,23 +28,27 @@ type WeatherResponse = {
   forecasts: Weather[];
 };
 
-const weatherData = ref<WeatherResponse | null>(null);
-const loading = ref(true);
-const API_URL = "https://coco-weather.onrender.com";
+// const weatherData = ref<WeatherResponse | null>(null);
+// const loading = ref(true);
+// const API_URL = "https;://coco-weather.onrender.com";
 
-onMounted(async () => {
-  try {
-    const res = await fetch(
-      `${API_URL}/api/weather?area=${selectedArea.value}`,
-    );
-    const data = await res.json();
-    weatherData.value = data;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
+onMounted(() => {
+  fetchAll(selectedArea.value);
 });
+
+// onMounted(async () => {
+//   try {
+//     const res = await fetch(
+//       `${API_URL}/api/weather?area=${selectedArea.value}`,
+//     );
+//     const data = await res.json();
+//     weatherData.value = data;
+//   } catch (e) {
+//     console.error(e);
+//   } finally {
+//     loading.value = false;
+//   }
+// });
 
 function getWeatherIcon(weather: string) {
   if (
@@ -65,13 +80,13 @@ const currentWeather = computed(() => {
   return weatherData.value?.forecasts?.[0]?.weather ?? "";
 });
 
-const overview = ref("");
+// const overview = ref("");
 
-onMounted(async () => {
-  const res = await fetch(`${API_URL}/api/overview`);
-  const data = await res.json();
-  overview.value = data.text;
-});
+// onMounted(async () => {
+//   const res = await fetch(`${API_URL}/api/overview`);
+//   const data = await res.json();
+//   overview.value = data.text;
+// });
 
 function getLabel(date: string) {
   const today = new Date();
@@ -93,83 +108,81 @@ function getLabel(date: string) {
   });
 }
 
-const isLocating = ref(false);
+// const isLocating = ref(false);
 
-async function getCurrentLocation() {
-  isLocating.value = true;
+// async function getCurrentLocation() {
+//   isLocating.value = true;
 
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      try {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+//   navigator.geolocation.getCurrentPosition(
+//     async (pos) => {
+//       try {
+//         const lat = pos.coords.latitude;
+//         const lon = pos.coords.longitude;
 
-        console.log("現在地:", lat, lon);
+//         console.log("現在地:", lat, lon);
 
-        const areaCode = await getAreaCodeFromLatLon(lat, lon);
+//         const areaCode = await getAreaCodeFromLatLon(lat, lon);
 
-        console.log("決定エリア:", areaCode);
+//         console.log("決定エリア:", areaCode);
 
-        const region = findRegionByAreaCode(areaCode);
+//         const region = findRegionByAreaCode(areaCode);
 
-        if (region) {
-          selectedRegion.value = region.region;
-        }
+//         if (region) {
+//           selectedRegion.value = region.region;
+//         }
 
-        selectedArea.value = areaCode;
+//         selectedArea.value = areaCode;
 
-        await fetchWeather();
-        await fetchOverview();
-      } catch (e) {
-        console.error(e);
-        alert("現在地の取得に失敗しました");
-      } finally {
-        isLocating.value = false; // ← ここ重要
-      }
-    },
-    (err) => {
-      console.error(err);
-      alert("位置情報の取得に失敗しました");
-      isLocating.value = false; // ← 忘れがち
-    },
-  );
-}
+//         await fetchWeather();
+//         await fetchOverview();
+//       } catch (e) {
+//         console.error(e);
+//         alert("現在地の取得に失敗しました");
+//       } finally {
+//         isLocating.value = false; // ← ここ重要
+//       }
+//     },
+//     (err) => {
+//       console.error(err);
+//       alert("位置情報の取得に失敗しました");
+//       isLocating.value = false; // ← 忘れがち
+//     },
+//   );
+// }
 
-async function getAreaCodeFromLatLon(
-  lat: number,
-  lon: number,
-): Promise<string> {
-  const res = await fetch(
-    `https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat=${lat}&lon=${lon}`,
-  );
+// async function getAreaCodeFromLatLon(
+//   lat: number,
+//   lon: number,
+// ): Promise<string> {
+//   const res = await fetch(
+//     `https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat=${lat}&lon=${lon}`,
+//   );
 
-  const data = await res.json();
+//   const data = await res.json();
 
-  const muniCd = data.results.muniCd; // 例: "13101"
-  const prefCode = muniCd.slice(0, 2); // "13"
+//   const muniCd = data.results.muniCd; // 例: "13101"
+//   const prefCode = muniCd.slice(0, 2); // "13"
 
-  return findAreaCodeFromPref(prefCode);
-}
+//   return findAreaCodeFromPref(prefCode);
+// }
 
-function findAreaCodeFromPref(prefCode: string): string {
-  for (const region of areas) {
-    for (const area of region.list) {
-      if (area.code.startsWith(prefCode)) {
-        return area.code;
-      }
-    }
-  }
+// function findAreaCodeFromPref(prefCode: string): string {
+//   for (const region of areas) {
+//     for (const area of region.list) {
+//       if (area.code.startsWith(prefCode)) {
+//         return area.code;
+//       }
+//     }
+//   }
 
-  return "130000"; // fallback（東京）
-}
+//   return "130000"; // fallback（東京）
+// }
 
-function findRegionByAreaCode(code: string) {
-  return areas.find((r) => r.list.some((a) => a.code === code));
-}
+// function findRegionByAreaCode(code: string) {
+//   return areas.find((r) => r.list.some((a) => a.code === code));
+// }
 
-const selectedRegion = ref("関東甲信");
-const selectedArea = ref("130000");
-
+// 地域変更
 function onRegionChange() {
   const region = areas.find((a) => a.region === selectedRegion.value);
   if (region) {
@@ -177,24 +190,49 @@ function onRegionChange() {
   }
 }
 
+// エリア変更
+watch(selectedArea, (area) => {
+  fetchAll(area);
+});
+
+// 現在地
+function handleLocation() {
+  getCurrentLocation((areaCode) => {
+    const region = findRegionByAreaCode(areaCode);
+
+    if (region) {
+      selectedRegion.value = region.region;
+    }
+
+    selectedArea.value = areaCode;
+  });
+}
+
+function handleLocationClick() {
+  getCurrentLocation((areaCode) => {
+    selectedArea.value = areaCode;
+  });
+}
+
+// フィルタ
 const filteredAreas = computed(() => {
   return areas.find((a) => a.region === selectedRegion.value)?.list ?? [];
 });
 
-watch(selectedArea, async () => {
-  await Promise.all([fetchWeather(), fetchOverview()]);
-});
+// watch(selectedArea, async () => {
+//   await Promise.all([fetchWeather(), fetchOverview()]);
+// });
 
-async function fetchWeather() {
-  const res = await fetch(`${API_URL}/api/weather?area=${selectedArea.value}`);
-  weatherData.value = await res.json();
-}
+// async function fetchWeather() {
+//   const res = await fetch(`${API_URL}/api/weather?area=${selectedArea.value}`);
+//   weatherData.value = await res.json();
+// }
 
-async function fetchOverview() {
-  const res = await fetch(`${API_URL}/api/overview?area=${selectedArea.value}`);
-  const data = await res.json();
-  overview.value = data.text;
-}
+// async function fetchOverview() {
+//   const res = await fetch(`${API_URL}/api/overview?area=${selectedArea.value}`);
+//   const data = await res.json();
+//   overview.value = data.text;
+// }
 </script>
 
 <template>
@@ -209,7 +247,7 @@ async function fetchOverview() {
       <div class="selector-wrapper">
         <button
           class="location-btn"
-          @click="getCurrentLocation"
+          @click="handleLocationClick"
           :disabled="isLocating"
         >
           <span v-if="isLocating" class="loading-content">
@@ -227,7 +265,7 @@ async function fetchOverview() {
             {{ region.region }}
           </option>
         </select>
-        <select v-model="selectedArea" @change="fetchWeather">
+        <select v-model="selectedArea">
           <option
             v-for="area in filteredAreas"
             :key="area.code"
@@ -300,7 +338,6 @@ body {
   margin: 0;
   font-family: "Helvetica", sans-serif;
   color: #666;
-  /* background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 50%, #a1c4fd 100%); */
 }
 
 .container {
