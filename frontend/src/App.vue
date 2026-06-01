@@ -6,10 +6,15 @@ import { useWeather } from "./composables/useWeather";
 import { useLocation } from "./composables/useLocation";
 import { useAreas } from "./composables/useAreas";
 
+import AreaSelector from "./components/AreaSelector.vue";
+import WeatherList from "./components/WeatherList.vue";
+import Overview from "./components/Overview.vue";
+import Footer from "./components/Footer.vue";
+
 const selectedRegion = ref("関東甲信");
 const selectedArea = ref("130000");
 
-const { weatherData, overview, fetchAll } = useWeather();
+const { weatherData, overview, fetchAll, loading, error } = useWeather();
 const { isLocating, getCurrentLocation } = useLocation();
 const { findRegionByAreaCode } = useAreas();
 
@@ -50,24 +55,24 @@ onMounted(() => {
 //   }
 // });
 
-function getWeatherIcon(weather: string) {
-  if (
-    weather.replace(/\s+/g, "").includes("晴") &&
-    weather.replace(/\s+/g, "").includes("くもり")
-  )
-    return "/icons/default.png";
-  if (weather.includes("雨") || weather.includes("あめ"))
-    return "/icons/rain.png";
-  if (weather.includes("曇") || weather.includes("くもり"))
-    return "/icons/cloud.png";
-  if (weather.includes("晴") || weather.includes("はれ"))
-    return "/icons/sun.png";
-  if (weather.includes("雷") || weather.includes("かみなり"))
-    return "/icons/thunder.png";
-  if (weather.includes("雪") || weather.includes("ゆき"))
-    return "/icons/snow.png";
-  return "/icons/default.png";
-}
+// function getWeatherIcon(weather: string) {
+//   if (
+//     weather.replace(/\s+/g, "").includes("晴") &&
+//     weather.replace(/\s+/g, "").includes("くもり")
+//   )
+//     return "/icons/default.png";
+//   if (weather.includes("雨") || weather.includes("あめ"))
+//     return "/icons/rain.png";
+//   if (weather.includes("曇") || weather.includes("くもり"))
+//     return "/icons/cloud.png";
+//   if (weather.includes("晴") || weather.includes("はれ"))
+//     return "/icons/sun.png";
+//   if (weather.includes("雷") || weather.includes("かみなり"))
+//     return "/icons/thunder.png";
+//   if (weather.includes("雪") || weather.includes("ゆき"))
+//     return "/icons/snow.png";
+//   return "/icons/default.png";
+// }
 
 function getBg(weather: string) {
   if (weather.includes("雨") || weather.includes("雪")) return "rainy";
@@ -88,25 +93,25 @@ const currentWeather = computed(() => {
 //   overview.value = data.text;
 // });
 
-function getLabel(date: string) {
-  const today = new Date();
-  const target = new Date(date);
+// function getLabel(date: string) {
+//   const today = new Date();
+//   const target = new Date(date);
 
-  // 日付だけ比較するために0時に揃える
-  today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
+//   // 日付だけ比較するために0時に揃える
+//   today.setHours(0, 0, 0, 0);
+//   target.setHours(0, 0, 0, 0);
 
-  const diff = (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+//   const diff = (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
 
-  if (diff === 0) return "今日";
-  if (diff === 1) return "明日";
-  if (diff === 2) return "明後日";
+//   if (diff === 0) return "今日";
+//   if (diff === 1) return "明日";
+//   if (diff === 2) return "明後日";
 
-  return target.toLocaleDateString("ja-JP", {
-    month: "numeric",
-    day: "numeric",
-  });
-}
+//   return target.toLocaleDateString("ja-JP", {
+//     month: "numeric",
+//     day: "numeric",
+//   });
+// }
 
 // const isLocating = ref(false);
 
@@ -182,17 +187,9 @@ function getLabel(date: string) {
 //   return areas.find((r) => r.list.some((a) => a.code === code));
 // }
 
-// 地域変更
-function onRegionChange() {
-  const region = areas.find((a) => a.region === selectedRegion.value);
-  if (region) {
-    selectedArea.value = region.list[0].code;
-  }
-}
-
-// エリア変更
+// 初回　＋　エリア変更
 watch(selectedArea, (area) => {
-  fetchAll(area);
+  (fetchAll(area), { immediate: true });
 });
 
 // 現在地
@@ -208,16 +205,29 @@ function handleLocation() {
   });
 }
 
-function handleLocationClick() {
-  getCurrentLocation((areaCode) => {
-    selectedArea.value = areaCode;
-  });
+// 地域変更
+function handleRegion() {
+  const region = areas.find((a) => a.region === selectedRegion.value);
+  if (region) {
+    selectedArea.value = region.list[0].code;
+  }
 }
 
+// エリア変更
+function handleArea(area: string) {
+  selectedArea.value = area;
+}
+
+// function handleLocationClick() {
+//   getCurrentLocation((areaCode) => {
+//     selectedArea.value = areaCode;
+//   });
+// }
+
 // フィルタ
-const filteredAreas = computed(() => {
-  return areas.find((a) => a.region === selectedRegion.value)?.list ?? [];
-});
+// const filteredAreas = computed(() => {
+//   return areas.find((a) => a.region === selectedRegion.value)?.list ?? [];
+// });
 
 // watch(selectedArea, async () => {
 //   await Promise.all([fetchWeather(), fetchOverview()]);
@@ -242,12 +252,21 @@ const filteredAreas = computed(() => {
     </div>
 
     <div v-if="loading" class="loading">読み込み中...</div>
+    <div v-else-if="error">{{ error }}</div>
 
     <div v-else-if="weatherData">
-      <div class="selector-wrapper">
+      <AreaSelector
+        :selectedRegion="selectedRegion"
+        :selectedArea="selectedArea"
+        :isLocating="isLocating"
+        @update:region="handleRegion"
+        @update:area="handleArea"
+        @location="handleLocation"
+      />
+      <!-- <div class="selector-wrapper">
         <button
           class="location-btn"
-          @click="handleLocationClick"
+          @click="handleLocation"
           :disabled="isLocating"
         >
           <span v-if="isLocating" class="loading-content">
@@ -274,19 +293,24 @@ const filteredAreas = computed(() => {
             {{ area.name }}
           </option>
         </select>
-      </div>
+      </div> -->
       <h4 class="location">ー {{ weatherData.location }} ー</h4>
 
-      <transition-group name="fade" tag="div" class="cards" :key="selectedArea">
-        <div
+      <WeatherList
+        v-if="weatherData"
+        :forecasts="weatherData.forecasts"
+        :selected-area="selectedArea"
+      />
+      <!-- <transition-group name="fade" tag="div" class="cards" :key="selectedArea"> -->
+      <!-- <div
           v-for="(item, index) in weatherData.forecasts.slice(0, 3)"
           :key="item.date"
           class="card"
           :style="{ animationDelay: `${index * 0.2}s` }"
         >
-          <h2 class="label">{{ getLabel(item.date) }}</h2>
-          <!-- 日付 -->
-          <p class="date">
+          <h2 class="label">{{ getLabel(item.date) }}</h2> -->
+      <!-- 日付 -->
+      <!-- <p class="date">
             {{
               new Date(item.date).toLocaleDateString("ja-JP", {
                 month: "numeric",
@@ -294,26 +318,23 @@ const filteredAreas = computed(() => {
                 weekday: "short",
               })
             }}
-          </p>
-          <!-- 天気 -->
-          <div class="weather-wrapper">
+          </p> -->
+      <!-- 天気 -->
+      <!-- <div class="weather-wrapper">
             <div class="weather">
               <img :src="getWeatherIcon(item.weather)" class="icon" />
-            </div>
-            <!-- <div class="weather-discribe">
-              <p>{{ item.weather.replace(/\s+/g, "") }}</p>
             </div> -->
-          </div>
-          <!-- 気温（メイン） -->
-          <p class="temp">
+      <!-- </div> -->
+      <!-- 気温（メイン） -->
+      <!-- <p class="temp">
             <span class="min">{{ item.temperature.min ?? "-" }}°</span>
             <span class="max">{{ item.temperature.max ?? "-" }}°</span>
-          </p>
-          <!-- 降水 -->
-          <p class="rain">☔ {{ item.precipitationProbability ?? "-" }}%</p>
-        </div>
-      </transition-group>
-      <div class="overview-card">
+          </p> -->
+      <!-- 降水 -->
+      <!-- <p class="rain">☔ {{ item.precipitationProbability ?? "-" }}%</p>
+        </div> -->
+      <!-- </transition-group> -->
+      <!-- <div class="overview-card">
         <div class="overview-header">
           <span class="icon">📝</span>
           <span class="title">天気概況</span>
@@ -323,12 +344,15 @@ const filteredAreas = computed(() => {
           {{ overview }}
         </p>
       </div>
-    </div>
-    <div class="footer">
+    </div> -->
+      <!-- <div class="footer">
       <p>
         &copy; 2026 ms-elliott / icons by
         <a target="_blank" href="https://icons8.com">Icons8</a>
       </p>
+    </div> -->
+      <Overview :text="overview" />
+      <Footer />
     </div>
   </div>
 </template>

@@ -6,6 +6,7 @@ const API_URL = "https://coco-weather.onrender.com";
 export function useWeather() {
   const weatherData = ref<WeatherResponse | null>(null);
   const overview = ref<string>("");
+  const isFirstLoad = ref(true);
   const loading = ref<boolean>(true);
   const error = ref<string | null>(null);
 
@@ -35,7 +36,10 @@ export function useWeather() {
 
   // まとめて取得
   async function fetchAll(area: string) {
-    loading.value = true;
+    if (isFirstLoad.value) {
+      loading.value = true;
+    }
+
     error.value = null;
 
     try {
@@ -45,6 +49,7 @@ export function useWeather() {
       error.value = "データ取得に失敗しました";
     } finally {
       loading.value = false;
+      isFirstLoad.value = false;
     }
   }
 
