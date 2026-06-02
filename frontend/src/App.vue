@@ -74,6 +74,45 @@ onMounted(() => {
 //   return "/icons/default.png";
 // }
 
+function getLabel(date: string) {
+  const today = new Date();
+  const target = new Date(date);
+
+  // 日付だけ比較するために0時に揃える
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+
+  const diff = (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (diff === 0) return "今日";
+  if (diff === 1) return "明日";
+  if (diff === 2) return "明後日";
+
+  return target.toLocaleDateString("ja-JP", {
+    month: "numeric",
+    day: "numeric",
+  });
+}
+
+function getWeatherIcon(weather: string) {
+  if (
+    weather.replace(/\s+/g, "").includes("晴") &&
+    weather.replace(/\s+/g, "").includes("くもり")
+  )
+    return "/icons/default.png";
+  if (weather.includes("雨") || weather.includes("あめ"))
+    return "/icons/rain.png";
+  if (weather.includes("曇") || weather.includes("くもり"))
+    return "/icons/cloud.png";
+  if (weather.includes("晴") || weather.includes("はれ"))
+    return "/icons/sun.png";
+  if (weather.includes("雷") || weather.includes("かみなり"))
+    return "/icons/thunder.png";
+  if (weather.includes("雪") || weather.includes("ゆき"))
+    return "/icons/snow.png";
+  return "/icons/default.png";
+}
+
 function getBg(weather: string) {
   if (weather.includes("雨") || weather.includes("雪")) return "rainy";
   if (weather.includes("くもり") || weather.includes("雷")) return "cloudy";
@@ -193,30 +232,44 @@ watch(selectedArea, (area) => {
 });
 
 // 現在地
-function handleLocation() {
-  getCurrentLocation((areaCode) => {
-    const region = findRegionByAreaCode(areaCode);
+async function handleLocation() {
+  try {
+    const areaCode = await getCurrentLocation();
 
+    selectedArea.value = areaCode;
+
+    // regionも同期
+    const region = findRegionByAreaCode(areaCode);
     if (region) {
       selectedRegion.value = region.region;
     }
-
-    selectedArea.value = areaCode;
-  });
-}
-
-// 地域変更
-function handleRegion() {
-  const region = areas.find((a) => a.region === selectedRegion.value);
-  if (region) {
-    selectedArea.value = region.list[0].code;
+  } catch (e) {
+    alert("位置情報の取得に失敗しました");
   }
 }
 
-// エリア変更
-function handleArea(area: string) {
-  selectedArea.value = area;
-}
+// // 地域変更
+// function handleRegion() {
+//   const region = areas.find((a) => a.region === selectedRegion.value);
+//   if (region) {
+//     selectedArea.value = region.list[0].code;
+//   }
+// }
+
+// function onRegionChange(region: string) {
+//   selectedRegion.value = region;
+
+//   const target = areas.find((a) => a.region === region);
+
+//   if (target) {
+//     selectedArea.value = target.list[0].code; // ← ここ重要
+//   }
+// }
+
+// // エリア変更
+// function handleArea(area: string) {
+//   selectedArea.value = area;
+// }
 
 // function handleLocationClick() {
 //   getCurrentLocation((areaCode) => {
@@ -256,11 +309,9 @@ function handleArea(area: string) {
 
     <div v-else-if="weatherData">
       <AreaSelector
-        :selectedRegion="selectedRegion"
-        :selectedArea="selectedArea"
+        v-model:region="selectedRegion"
+        v-model:area="selectedArea"
         :isLocating="isLocating"
-        @update:region="handleRegion"
-        @update:area="handleArea"
         @location="handleLocation"
       />
       <!-- <div class="selector-wrapper">
@@ -299,7 +350,9 @@ function handleArea(area: string) {
       <WeatherList
         v-if="weatherData"
         :forecasts="weatherData.forecasts"
-        :selected-area="selectedArea"
+        :selectedArea="selectedArea"
+        :getLabel="getLabel"
+        :getWeatherIcon="getWeatherIcon"
       />
       <!-- <transition-group name="fade" tag="div" class="cards" :key="selectedArea"> -->
       <!-- <div
