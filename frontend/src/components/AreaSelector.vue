@@ -159,8 +159,13 @@ const filteredAreas = computed(() => {
 }
 
 @media (max-width: 600px) {
+  .selector-wrapper {
+    flex-direction: column;
+    align-items: center;
+  }
+
   .selector-wrapper select {
-    width: 100%;
+    width: 68%;
     font-size: 16px;
   }
 }

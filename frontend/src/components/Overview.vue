@@ -52,4 +52,12 @@ defineProps<{
 .overview-card p {
   font-size: 14px;
 }
+
+@media (max-width: 600px) {
+  .overview-card {
+    width: 80%;
+    min-width: unset;
+    margin-inline: auto;
+  }
+}
 </style>

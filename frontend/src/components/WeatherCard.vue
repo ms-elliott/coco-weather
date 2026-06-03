@@ -4,9 +4,41 @@ import type { Weather } from "../types/weather";
 defineProps<{
   item: Weather;
   index: number;
-  getLabel: (date: string) => string;
-  getWeatherIcon: (weather: string) => string;
 }>();
+
+function getLabel(date: string) {
+  const today = new Date();
+  const target = new Date(date);
+
+  // 日付だけ比較するために0時に揃える
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+
+  const diff = (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (diff === 0) return "今日";
+  if (diff === 1) return "明日";
+  if (diff === 2) return "明後日";
+
+  return target.toLocaleDateString("ja-JP", {
+    month: "numeric",
+    day: "numeric",
+  });
+}
+
+function getWeatherIcon(weather: string) {
+  if (
+    weather.replace(/\s+/g, "").includes("晴") &&
+    weather.replace(/\s+/g, "").includes("くもり")
+  )
+    return "/icons/default.png";
+  if (weather.includes("雷")) return "/icons/thunder.png";
+  if (weather.includes("雪")) return "/icons/snow.png";
+  if (weather.includes("雨")) return "/icons/rain.png";
+  if (weather.includes("くもり")) return "/icons/cloud.png";
+  if (weather.includes("晴")) return "/icons/sun.png";
+  return "/icons/default.png";
+}
 </script>
 
 <template>
@@ -47,7 +79,7 @@ defineProps<{
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 16px;
-  width: 180px;
+  width: 90%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
   position: relative;
@@ -65,6 +97,8 @@ defineProps<{
 @media (max-width: 600px) {
   .card {
     width: 90%;
+    max-width: 90%;
+    box-sizing: border-box;
     flex: none;
     min-width: unset;
   }
