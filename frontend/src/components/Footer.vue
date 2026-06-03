@@ -6,3 +6,11 @@
     </p>
   </div>
 </template>
+
+<style scoped>
+.footer {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #555;
+}
+</style>

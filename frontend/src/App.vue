@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
-import { areas } from "./data/areas";
+// import { areas } from "./data/areas";
 
 import { useWeather } from "./composables/useWeather";
 import { useLocation } from "./composables/useLocation";
@@ -18,20 +18,20 @@ const { weatherData, overview, fetchAll, loading, error } = useWeather();
 const { isLocating, getCurrentLocation } = useLocation();
 const { findRegionByAreaCode } = useAreas();
 
-type Weather = {
-  date: string;
-  weather: string;
-  temperature: {
-    min?: number;
-    max?: number;
-  };
-  precipitationProbability?: number;
-};
+// type Weather = {
+//   date: string;
+//   weather: string;
+//   temperature: {
+//     min?: number;
+//     max?: number;
+//   };
+//   precipitationProbability?: number;
+// };
 
-type WeatherResponse = {
-  location: string;
-  forecasts: Weather[];
-};
+// type WeatherResponse = {
+//   location: string;
+//   forecasts: Weather[];
+// };
 
 // const weatherData = ref<WeatherResponse | null>(null);
 // const loading = ref(true);
@@ -100,23 +100,23 @@ function getWeatherIcon(weather: string) {
     weather.replace(/\s+/g, "").includes("くもり")
   )
     return "/icons/default.png";
-  if (weather.includes("雨") || weather.includes("あめ"))
-    return "/icons/rain.png";
-  if (weather.includes("曇") || weather.includes("くもり"))
-    return "/icons/cloud.png";
-  if (weather.includes("晴") || weather.includes("はれ"))
-    return "/icons/sun.png";
-  if (weather.includes("雷") || weather.includes("かみなり"))
-    return "/icons/thunder.png";
-  if (weather.includes("雪") || weather.includes("ゆき"))
-    return "/icons/snow.png";
+  if (weather.includes("雷")) return "/icons/thunder.png";
+  if (weather.includes("雪")) return "/icons/snow.png";
+  if (weather.includes("雨")) return "/icons/rain.png";
+  if (weather.includes("くもり")) return "/icons/cloud.png";
+  if (weather.includes("晴")) return "/icons/sun.png";
   return "/icons/default.png";
 }
 
 function getBg(weather: string) {
+  if (
+    weather.replace(/\s+/g, "").includes("晴") &&
+    weather.replace(/\s+/g, "").includes("くもり")
+  )
+    return "default";
   if (weather.includes("雨") || weather.includes("雪")) return "rainy";
   if (weather.includes("くもり") || weather.includes("雷")) return "cloudy";
-  if (weather.includes("晴")) return "sunny";
+  if (weather.startsWith("晴")) return "sunny";
   return "default";
 }
 
@@ -345,7 +345,7 @@ async function handleLocation() {
           </option>
         </select>
       </div> -->
-      <h4 class="location">ー {{ weatherData.location }} ー</h4>
+      <!-- <h4 class="location">ー {{ weatherData.location }} ー</h4> -->
 
       <WeatherList
         v-if="weatherData"
@@ -404,7 +404,7 @@ async function handleLocation() {
         <a target="_blank" href="https://icons8.com">Icons8</a>
       </p>
     </div> -->
-      <Overview :text="overview" />
+      <Overview v-if="overview" :text="overview" :key="selectedArea" />
       <Footer />
     </div>
   </div>
@@ -430,116 +430,6 @@ body {
   .container {
     padding: 12px;
   }
-}
-
-.selector-wrapper {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.location-btn {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #ffb770;
-  color: black;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s;
-}
-
-.loading-content {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center;
-}
-
-/* くるくる */
-.spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid #ccc;
-  border-top: 2px solid #333;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-/* アニメーション */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ボタン無効時 */
-.location-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.location-btn:hover {
-  background: #ff8c00;
-}
-
-/* select共通 */
-.selector-wrapper select {
-  appearance: none; /* デフォルト矢印消す */
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  padding: 10px 36px 10px 14px;
-  border-radius: 10px;
-  border: none;
-  font-size: 14px;
-  background: white;
-  color: #333;
-
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  position: relative;
-
-  transition: all 0.2s ease;
-}
-
-/* ホバー */
-.selector-wrapper select:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-/* フォーカス */
-.selector-wrapper select:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #4dabf7;
-}
-
-/* カスタム矢印 */
-.selector-wrapper {
-  position: relative;
-}
-
-.selector-wrapper select {
-  background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M5 7l5 5 5-5z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 16px;
-}
-
-@media (max-width: 600px) {
-  .selector-wrapper select {
-    width: 100%;
-    font-size: 16px;
-  }
-}
-
-.overview-card {
-  padding: 16px;
 }
 
 /* 晴れ */
@@ -585,16 +475,8 @@ h1 {
 }
 
 h4.location {
-  margin-bottom: 15px;
   font-weight: bold;
   color: #666;
-}
-
-.cards {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
 }
 
 .fade-enter-active {
@@ -611,185 +493,7 @@ h4.location {
   transform: translateY(0);
 }
 
-.card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 16px;
-  width: 180px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  position: relative;
-  z-index: 1;
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-  cursor: pointer;
-  animation: fadeUp 0.6s ease forwards;
-  opacity: 0;
-  flex: 1;
-  min-width: 200px;
-}
-
-@media (max-width: 600px) {
-  .cards {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .card {
-    width: 90%;
-    flex: none;
-    min-width: unset;
-  }
-}
-
-.card:first-child {
-  transform: scale(1.05);
-}
-
-.card:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.card:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-.card:hover {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-  z-index: 10;
-  transform: translateY(-8px) scale(1.03);
-}
-
-.card p:nth-child(2) {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.card p:nth-child(3) {
-  color: #ffb703; /* 太陽カラー */
-}
-
-.label {
-  font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.date {
-  font-size: 14px;
-  margin-bottom: 18px;
-}
-
-.weather {
-  font-size: 40px;
-  margin: 10px 0;
-  animation: float 2s ease-in-out infinite;
-}
-
-.weather-discribe {
-  font-size: 14px;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.icon {
-  width: 50%;
-  height: 50%;
-}
-
-@media (max-width: 600px) {
-  .icon {
-    width: 60px;
-    height: 60px;
-  }
-}
-
-temp {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-@media (max-width: 600px) {
-  .label {
-    font-size: 16px;
-  }
-
-  .date {
-    font-size: 14px;
-  }
-
-  .weather {
-    font-size: 28px; /* ← 小さくする */
-  }
-
-  .temp {
-    font-size: 22px; /* ← 大きくする */
-    font-weight: bold;
-  }
-
-  .rain {
-    font-size: 16px;
-  }
-}
-
-.min {
-  color: #4dabf7;
-  margin-right: 6px;
-}
-
-.max {
-  color: #ff6b6b;
-}
-
-.rain {
-  font-size: 14px;
-  color: #555;
-  margin-top: 8px;
-}
-
-.overview-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px;
-  margin-top: 20px;
-  position: relative;
-  line-height: 1.2;
-  text-align: start;
-  white-space: pre-line;
-  width: 760px;
-  animation: fadeUp 0.6s ease;
-}
-
-.overview-card::after {
-  content: "";
-  position: absolute;
-  bottom: -10px;
-  left: 20px;
-  border: 10px solid transparent;
-  border-top-color: #fff;
-}
-
-.overview-header {
-  margin-bottom: 16px;
-}
-
-.title {
-  font-weight: bold;
-}
-
-.overview-card p {
-  font-size: 14px;
-}
-
-.footer {
-  margin-top: 20px;
-  font-size: 12px;
-  color: #555;
-}
-
-@keyframes rainBg {
+/* @keyframes rainBg {
   0% {
     filter: brightness(1);
   }
@@ -799,7 +503,7 @@ temp {
   100% {
     filter: brightness(1);
   }
-}
+} */
 
 @keyframes fadeUp {
   from {
@@ -809,18 +513,6 @@ temp {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-  100% {
-    transform: translateY(0px);
   }
 }
 </style>

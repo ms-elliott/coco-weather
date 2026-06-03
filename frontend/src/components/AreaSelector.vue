@@ -59,3 +59,109 @@ const filteredAreas = computed(() => {
     </select>
   </div>
 </template>
+
+<style scoped>
+.selector-wrapper {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.location-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: #ffb770;
+  color: black;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s;
+}
+
+.loading-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* くるくる */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ccc;
+  border-top: 2px solid #333;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* アニメーション */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ボタン無効時 */
+.location-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.location-btn:hover {
+  background: #ff8c00;
+}
+
+/* select共通 */
+.selector-wrapper select {
+  appearance: none; /* デフォルト矢印消す */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  padding: 10px 36px 10px 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  background: white;
+  color: #333;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  position: relative;
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M5 7l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+
+  transition: all 0.2s ease;
+}
+
+/* ホバー */
+.selector-wrapper select:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* フォーカス */
+.selector-wrapper select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #4dabf7;
+}
+
+/* カスタム矢印 */
+.selector-wrapper {
+  position: relative;
+}
+
+@media (max-width: 600px) {
+  .selector-wrapper select {
+    width: 100%;
+    font-size: 16px;
+  }
+}
+</style>

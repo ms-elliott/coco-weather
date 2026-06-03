@@ -29,3 +29,20 @@ defineProps<{
     ></div> -->
   </transition-group>
 </template>
+
+<style scoped>
+.cards {
+  display: flex;
+  margin-top: 25px;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .cards {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
