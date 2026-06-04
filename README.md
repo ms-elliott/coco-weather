@@ -47,7 +47,17 @@
 
 # 画面キャプチャ
 
+| トップ画面　(データ読み込み中　〜　東京都表示、背景：雨・雪)|　現在地表示（静岡県） |
+| ---- | ---- |
+| <video width="45%" src="https://github.com/user-attachments/assets/86550b51-401c-4516-95a9-78f33a60836b"> | <video width="45%" src="https://github.com/user-attachments/assets/8ffa8184-c8e3-4c4c-9780-4b3c75d23748"> |
+| 背景：晴 |　背景：くもり・雷 |
+| <video  width="45%" src="https://github.com/user-attachments/assets/766c0535-5f22-408a-ab7d-d3681f23a913"> | <video width="45%" src="https://github.com/user-attachments/assets/bde31d66-4654-4c7a-84bd-924aa2937af5"> |
+| 背景：晴/くもり(デフォルト)|　データ取得エラー |
+| <video width="45%" src="https://github.com/user-attachments/assets/02b2c9f6-ff44-427b-a5c2-3c1157d1d88c"> | <video width="45%" src="https://github.com/user-attachments/assets/fa997f34-1702-4871-a53f-ae9760575c08">　|
 
+| レスポンシブ対応(モバイル) |
+| ---- |
+| <img width="399" height="819" alt="スクリーンショット 2026-06-04 午後10 43 37" src="https://github.com/user-attachments/assets/4dd28441-178a-4252-bea0-964339ec10dd" /> |
 
 ---
 
